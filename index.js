@@ -1,6 +1,4 @@
-import express from 'express'
-import { graphqlHTTP } from 'express-graphql'
-import { buildSchema } from 'graphql'
+import { ApolloServer, gql } from 'apollo-server'
 import crypto from 'crypto'
 
 const db = {
@@ -15,70 +13,65 @@ const db = {
   ]
 }
 
-const schema = buildSchema(`
-    type Query {
-        users: [User!]!
-        user(id: ID!): User!
-        messages: [Message!]!
-    }
-
-    type Mutation {
-      addUser(email: String!, name: String): User
-      delUser(id: ID!): User
-    }
-
-    type User {
-      id: ID!
-      name: String
-      email: String
-      avatarUrl: String
-      messages:[Message!]!
-    }
-
-    type Message {
-      id: ID!
-      body: String!
-      createdAt: String!
-    }
-`)
-
-class User {
-  constructor (user) {
-    Object.assign(this, user)
+const typeDefs = gql`
+  type Query {
+    users: [User!]!
+    user(id: ID!): User!
+    messages: [Message!]!
   }
 
-  messages () {
-    return db.messages.filter((message) => message.userId === this.id)
+  type Mutation {
+    addUser(email: String!, name: String): User
+    delUser(id: ID!): User
   }
-}
 
-// resolver
-const rootValue = {
-  users: () => db.users.map((user) => new User(user)),
-  user: (args) =>
-    db.users.map((user) => new User(user)).find((user) => user.id === args.id),
-  messages: () => db.messages,
-  addUser: ({ email, name }) => {
-    const user = {
-      id: crypto.randomBytes(10).toString('hex'),
-      email,
-      name
-    }
-    db.users.push(user)
-    return user
+  type User {
+    id: ID!
+    name: String
+    email: String
+    avatarUrl: String
+    messages: [Message!]!
+  }
+
+  type Message {
+    id: ID!
+    body: String!
+    createdAt: String!
+  }
+`
+const resolvers = {
+  Query: {
+    users: () => db.users,
+    user: (root, { id }) => db.users.find((user) => user.id === id),
+    messages: () => db.messages
   },
-  delUser: ({ id }) => {
-    const user = db.users.find((user) => user.id === id)
-    if (user) {
-      db.users = db.users.filter((user) => user.id !== id)
+  Mutation: {
+    addUser: (root, { email, name }) => {
+      const user = {
+        id: crypto.randomBytes(10).toString('hex'),
+        email,
+        name
+      }
+      db.users.push(user)
+      return user
+    },
+    delUser: (root, { id }) => {
+      const user = db.users.find((user) => user.id === id)
+      if (user) {
+        db.users = db.users.filter((user) => user.id !== id)
+      }
+      return user
     }
-    return user
+  },
+  User: {
+    messages: (user) =>
+      db.messages.filter((message) => message.userId === user.id)
   }
 }
 
-const app = express()
+const server = new ApolloServer({ typeDefs, resolvers })
 
-app.use('/graphql', graphqlHTTP({ schema, rootValue, graphiql: true }))
-
-const PORT = process.env.PORT || 3000
-app.listen(PORT, () => console.log(`listen on localhost: ${PORT}`))
+server
+  .listen()
+  .then(({ url }) => console.log(url))
+  .catch((e) => console.log(e))
