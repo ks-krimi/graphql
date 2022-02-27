@@ -1,0 +1,34 @@
+{
+  "name": "immobilier",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node -r esm .",
+    "dev": "nodemon -r esm"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server": "^3.6.2",
+    "apollo-server-core": "^3.6.2",
+    "apollo-server-express": "^3.6.2",
+    "bcryptjs": "^2.4.3",
+    "connect-redis": "^6.1.1",
+    "dotenv": "^16.0.0",
+    "esm": "^3.2.25",
+    "express": "^4.17.2",
+    "express-graphql": "^0.12.0",
+    "express-session": "^1.17.2",
+    "graphql": "^15.8.0",
+    "graphql-yoga": "^1.18.3",
+    "joi": "^17.6.0",
+    "mongoose": "^6.2.1",
+    "redis": "^4.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15",
+    "standard": "^16.0.4"
+  }
+}
